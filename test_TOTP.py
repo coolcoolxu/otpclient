@@ -1,6 +1,8 @@
 import hmac
 import sha
 import binascii
+import time
+import base64
 
 def long_to_bytes (val, endianness='big'):
     """
@@ -103,7 +105,7 @@ def get_HOTP(secret,counter,codedigits):
     
     #get hmac-sha1 digest from secret&counter
     digest = get_hmac_sha1(secret,counter)
-    print "The value of hmac-sha1(secret,counter) is:\n%s" % (binascii.hexlify(digest))
+    print "The value of hmac-sha1(secret,counter) in hex is:\n%s" % (binascii.hexlify(digest))
     
     #get the dt offset from digest
     offset = get_dt_offset(digest)
@@ -140,23 +142,35 @@ def get_TOTP(secret,Time,codedigits):
     TOTPstr = get_HOTP(secret,counter,codedigits)
     return TOTPstr
   
-    
-key = "12345678901234567890"
+def get_decoded_secret(b32encodedsecret):
+    decodedsecret = base64.b32decode(b32encodedsecret)
+    return decodedsecret
+  
+#key = "12345678901234567890"
+#Times = [59,1111111109,1111111111,1234567890,2000000000,20000000000]    
+#for Time in Times:
+#    TOTP = get_TOTP(key,Time,8)
+#    print "The TOTP value is %s\n" % (TOTP)
 
-for i in range(10):   
-    count = long(i)
-    print "The value of count is :%d" % (count)
-    #print "The binary presentation of count is :%s" % (bin(count))
-    #print "The hex presentation of count is :%08x" % (count)
-    #print "the bit length of count is %d" % (count.bit_length()) 
-    print "The key is :%s" % (key)
-     
-    HOTP = get_HOTP(key,count,6)
-    print "The HOTP value is %s\n" % (HOTP)
+b32encodedsecret = "WODJU6A3HI4ELAW6M6XT6GU4YGPJPALEZ33DI7K7PB3VSGBLX5J2B55PGZURLQQB"
+secret = get_decoded_secret(b32encodedsecret)
     
-Times = [59,1111111109,1111111111,1234567890,2000000000,20000000000]    
-for Time in Times:
-    TOTP = get_TOTP(key,Time,8)
-    print "The TOTP value is %s\n" % (TOTP)
-    
+#now = int(time.time())
+#TOTP = get_TOTP(secret,now,6)
+#print "Using secret in hex %s and current time, the totp is %s\n" %(binascii.hexlify(secret),TOTP)
 
+while True:
+    now = int(time.time())
+    rest = now % 30
+    countdown = 30-rest
+    if (rest != 0):
+        print "!!!!!!!!!!!!!!!!       wait for %d seconds        !!!!!!!!!!" % (countdown)
+        time.sleep(1)
+        continue
+    else:
+        TOTP = get_TOTP(secret,now,6)
+        print "!!!!!!!!!!!!!!!!       %s        !!!!!!!!!!\n" % (TOTP)
+        time.sleep(1)
+    
+    
+    
